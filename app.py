@@ -10,7 +10,59 @@ st.set_page_config(layout="wide", page_title='Startup Analysis')
 df = pd.read_csv('startup_cleaned.csv')
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 
+df['month'] = df['date'].dt.month
+df['year'] = df['date'].dt.year
+
+# General Analysis
+def load_overall_analysis():
+    st.title('Overall Analysis')
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        # Total Invested Amount
+        total = round(df['amount'].sum())
+        st.metric('Total', str(total) + ' Cr')
+
+    with col2:
+        # Maximum Amount Infused in a Startup
+        max_funding = df.groupby('startup')['amount'].max().sort_values(ascending=False).head(1).values[0]
+        st.metric('Max', str(round(max_funding)) + ' Cr')
+
+    with col3:
+        # Average Funding to Company
+        avg_funding = df.groupby('startup')['amount'].sum().mean()
+        st.metric('Avg', str(round(avg_funding)) + ' Cr')
+
+    with col4:
+        # Total Funded Startups
+        total_funded_startups = df['startup'].nunique()
+        st.metric('Total Funded Startups', str(total_funded_startups))
+
+
+    # Month on Month Graph
+    st.header('Month on Month Graph')
+    selected_variable = st.selectbox('Select Type', options=['Total', 'Count'])
+    if selected_variable == 'Total':
+        temp_df = df.groupby(['year', 'month'])['amount'].sum().reset_index()
+        temp_df['x_axis'] = temp_df['month'].astype('str') + '-' + temp_df['year'].astype('str')
+        fig5, ax5 = plt.subplots()
+        ax5.plot(temp_df['x_axis'], temp_df['amount'])
+        st.pyplot(fig5)
+    else:
+        temp_df = df.groupby(['year', 'month'])['amount'].count().reset_index()
+        temp_df['x_axis'] = temp_df['month'].astype('str') + '-' + temp_df['year'].astype('str')
+        fig6, ax6 = plt.subplots()
+        ax6.plot(temp_df['x_axis'], temp_df['amount'])
+        st.pyplot(fig6)
+
+
+
+
+
+# Investor Sector
 def load_investor_details(investor):
+
     st.title(investor)
 
     # Load the recent 5 investment of the investor
@@ -57,7 +109,6 @@ def load_investor_details(investor):
         st.pyplot(fig2)
 
         # Year on Investment
-        df['year'] = df['date'].dt.year
         year_series = df[df['investors'].str.contains(investor)].groupby('year')['amount'].sum()
         st.subheader('Year on Year Investment')
         fig4, ax4 = plt.subplots()
@@ -67,13 +118,14 @@ def load_investor_details(investor):
 
 
 
+
 st.sidebar.title('Startup Funding Analysis')
 
 
-option = st.sidebar.selectbox('Select One', ['Overall Analysis', 'Startup', 'Investor'])
+option = st.sidebar.selectbox('Select One', ['Overall', 'Startup', 'Investor'])
 
-if option == 'Overall Analysis':
-    st.title('Overall Analysis')
+if option == 'Overall':
+    load_overall_analysis()
 
 
 elif option == 'Startup':
@@ -87,17 +139,4 @@ else:
     btn2 = st.sidebar.button('Find Investor Details')
     if btn2:
         load_investor_details(selected_investor)
-
-    #st.title('Investor Analysis')
-
-
-
-
-
-
-
-
-
-
-
 
