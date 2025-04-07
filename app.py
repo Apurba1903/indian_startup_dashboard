@@ -8,6 +8,7 @@ st.set_page_config(layout="wide", page_title='Startup Analysis')
 
 
 df = pd.read_csv('startup_cleaned.csv')
+df['date'] = pd.to_datetime(df['date'], errors='coerce')
 
 def load_investor_details(investor):
     st.title(investor)
@@ -33,6 +34,13 @@ def load_investor_details(investor):
         ax1.pie(vertical_series, labels=vertical_series.index, autopct='%0.1f%%')
         st.pyplot(fig1)
 
+        # Cities
+        city_series = df[df['investors'].str.contains(investor)].groupby('city')['amount'].sum()
+        st.subheader('Invested Cities')
+        fig3, ax3 = plt.subplots()
+        ax3.pie(city_series, labels=city_series.index, autopct='%0.1f%%')
+        st.pyplot(fig3)
+
 
     with col2:
 
@@ -40,6 +48,22 @@ def load_investor_details(investor):
         fig, ax = plt.subplots()
         ax.bar(big_series.index, big_series.values)
         st.pyplot(fig)
+
+        # Rounds Invested
+        round_series = df[df['investors'].str.contains(investor)].groupby('round')['amount'].sum()
+        st.subheader('Rounds Invested')
+        fig2, ax2 = plt.subplots()
+        ax2.pie(round_series, labels=round_series.index, autopct='%0.1f%%')
+        st.pyplot(fig2)
+
+        # Year on Investment
+        df['year'] = df['date'].dt.year
+        year_series = df[df['investors'].str.contains(investor)].groupby('year')['amount'].sum()
+        st.subheader('Year on Year Investment')
+        fig4, ax4 = plt.subplots()
+        ax4.plot(year_series.index, year_series.values)
+        st.pyplot(fig4)
+
 
 
 
